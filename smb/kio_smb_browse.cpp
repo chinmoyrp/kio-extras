@@ -46,6 +46,8 @@
 
 #include <config-runtime.h>
 
+#include "mountserviced_interface.h"
+
 using namespace KIO;
 
 int SMBSlave::cache_stat(const SMBUrl &url, struct stat* st )
@@ -338,6 +340,16 @@ void SMBSlave::listDir( const QUrl& kurl )
    qCDebug(KIO_SMB) << "open " << m_current_url.toSmbcUrl() << " " << m_current_url.getType() << " " << dirfd;
    if(dirfd >= 0)
    {
+       QUrl urlToMount = QUrl::fromEncoded(m_current_url.toSmbcUrl()).adjusted(QUrl::StripTrailingSlash);
+       if (urlToMount.path() != QStringLiteral("/")) {
+           urlToMount.setUserName({});
+           urlToMount.setPassword({});
+           qCDebug(KIO_SMB) << "sending mount request to kde" << urlToMount;
+           org::kde::kio::MountServiceManager kded(QStringLiteral("org.kde.kded5"), QStringLiteral("/modules/mountservicemanager"), QDBusConnection::sessionBus());
+           auto reply = kded.mountURL(urlToMount.toString());
+           qCDebug(KIO_SMB) << "kded reply:" << reply.error();
+       }
+
        uint direntCount = 0;
        do {
            qCDebug(KIO_SMB) << "smbc_readdir ";

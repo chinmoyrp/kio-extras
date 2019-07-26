@@ -37,6 +37,9 @@
 #include <klocalizedstring.h>
 #include <stdlib.h>
 
+#include "mountserviced_interface.h"
+#include <QDBusConnection>
+
 // call for libsmbclient
 //==========================================================================
 void auth_smbc_get_data(SMBCCTX * context,
@@ -67,6 +70,7 @@ void SMBSlave::auth_smbc_get_data(const char *server,const char *share,
                                   char *password, int pwmaxlen)
 //--------------------------------------------------------------------------
 {
+
     //check this to see if we "really" need to authenticate...
     SMBUrlType t = m_current_url.getType();
     if( t == SMBURLTYPE_ENTIRE_NETWORK )
@@ -114,6 +118,10 @@ void SMBSlave::auth_smbc_get_data(const char *server,const char *share,
 
     } else
         qCDebug(KIO_SMB) << "got password through cache";
+
+    qCDebug(KIO_SMB) << "sending auth to kded" << info.url.host() << info.username;
+    org::kde::kio::MountServiceManager kded(QStringLiteral("org.kde.kded5"), QStringLiteral("/modules/mountservicemanager"), QDBusConnection::sessionBus());
+    kded.setAuthority(info.url.host(), QStringLiteral("%1:%2").arg(info.username).arg(info.password));
 
     strncpy(username, info.username.toUtf8(), unmaxlen - 1);
     strncpy(password, info.password.toUtf8(), pwmaxlen - 1);

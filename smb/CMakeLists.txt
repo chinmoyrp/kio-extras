@@ -23,6 +23,8 @@ set(kio_smb_PART_SRCS
 
 include_directories(${SAMBA_INCLUDE_DIR})
 
+qt5_add_dbus_interface(kio_smb_PART_SRCS org.kde.kio.MountServiceManager.xml mountserviced_interface)
+
 add_library(kio_smb MODULE ${kio_smb_PART_SRCS})
 
 target_link_libraries(kio_smb
